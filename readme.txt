@@ -16,45 +16,34 @@ A arquitetura do sistema é distribuída entre dois níveis de processamento:
 * **Raspberry Pi (processamento avançado e tomada de decisão)**
 
 ---
-
 ## Arquitetura do Sistema
+### Arduino (Controle em Tempo Real)
 
-### Camada de Controle (Arduino)
+Responsabilidades:
 
-Responsável por operações em tempo real e interação direta com o hardware.
-
-Funções:
-
-* Controle de motores DC
-* Leitura de sensores de linha
-* Implementação do controlador PID
+* Controle de motores
+* Execução de PID (com base nos dados da HuskyLens)
 * Controle de servos (garra)
-* Comunicação com HuskyLens (leitura de dados)
-* Comunicação com Raspberry Pi via serial
+* Leitura dos dados da HuskyLens via UART/I2C
+* Comunicação com Raspberry Pi
 
 Linguagem:
 
-* C/C++ (Arduino)
+C/C++
 
----
+###Raspberry Pi (Processamento Avançado)
 
-### Camada de Processamento (Raspberry Pi)
+Responsabilidades:
 
-Responsável por processamento intensivo e lógica de alto nível.
-
-Funções:
-
-* Leitura e processamento de dados do LIDAR
+* Leitura do LIDAR
 * Mapeamento da arena
-* Detecção e desvio de obstáculos
-* Integração de informações (linha, vítimas, mapa)
-* Tomada de decisão
-* Envio de comandos para o Arduino
+* Detecção de obstáculos
+* Sistema de decisão (alto nível)
+* Coordenação geral do robô
 
 Linguagem:
 
 * Python
-
 ---
 
 ## Módulos do Sistema
@@ -101,34 +90,11 @@ Exemplo de mensagens:
 3. HuskyLens detecta possíveis vítimas
 4. Arduino recebe dados da HuskyLens
 5. Raspberry Pi decide a ação:
-
    * continuar na linha
    * desviar de obstáculo
    * capturar vítima
 6. Raspberry envia comando ao Arduino
 7. Arduino executa ação (movimento ou garra)
-
----
-
-## Estrutura de Software Sugerida
-
-### Arduino
-
-* `main.ino`
-* `pid_controller.cpp`
-* `motor_driver.cpp`
-* `line_sensor.cpp`
-* `servo_control.cpp`
-* `huskylens_interface.cpp`
-* `serial_comm.cpp`
-
-### Raspberry Pi
-
-* `main.py`
-* `lidar_interface.py`
-* `mapping.py`
-* `decision_system.py`
-* `communication.py`
 
 ---
 
@@ -158,7 +124,6 @@ Hardware:
 * Raspberry Pi
 * Sensor LIDAR
 * HuskyLens
-* Sensores de linha
 * Motores DC + driver
 * Servomotores
 
@@ -264,8 +229,6 @@ arduino/
 │   │   └── servo_driver.h
 │   │
 │   ├── sensors/
-│   │   ├── line_sensor.cpp
-│   │   ├── line_sensor.h
 │   │   ├── huskylens.cpp
 │   │   └── huskylens.h
 │   │
