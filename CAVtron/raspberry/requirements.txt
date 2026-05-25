@@ -1,0 +1,100 @@
+# =============================================================
+#  requirements.txt — Camada Raspberry Pi
+#  Robô Seguidor de Linha com Resgate e Mapeamento
+# =============================================================
+#
+#  Instalação:
+#      pip install -r requirements.txt --break-system-packages
+#
+#  Ambiente alvo:
+#      Raspberry Pi OS (Bookworm / Bullseye) — Python 3.10+
+#
+#  Versões fixadas com ~= (compatibilidade de patch garantida).
+#  Para atualizar: pip install -r requirements.txt -U
+# =============================================================
+
+
+# -------------------------------------------------------
+#  COMUNICAÇÃO SERIAL
+# -------------------------------------------------------
+
+# Interface UART com o Arduino (pySerial)
+# Documentação: https://pyserial.readthedocs.io
+pyserial~=3.5
+
+
+# -------------------------------------------------------
+#  SENSOR LIDAR
+# -------------------------------------------------------
+
+# Driver oficial RPLidar A1/A2/A3 (Slamtec)
+# Repositório: https://github.com/SkoltechRobotics/rplidar
+rplidar-roboticia~=0.9.2
+
+
+# -------------------------------------------------------
+#  PROCESSAMENTO NUMÉRICO / MAPEAMENTO
+# -------------------------------------------------------
+
+# Arrays N-dimensionais — grade de ocupação, nuvem de pontos
+# Utilizado em: mapping.py, obstacle_detection.py
+numpy~=1.26.0
+
+# Álgebra linear e transformações de coordenadas (opcional, para SLAM futuro)
+scipy~=1.12.0
+
+
+# -------------------------------------------------------
+#  CONFIGURAÇÃO
+# -------------------------------------------------------
+
+# Leitura de arquivos YAML (robot_config.yaml, pid_config.yaml)
+# Utilizado em: utils/helpers.py → load_config()
+PyYAML~=6.0.1
+
+
+# -------------------------------------------------------
+#  VISÃO COMPUTACIONAL (extensão futura com OpenCV)
+# -------------------------------------------------------
+
+# OpenCV — processamento de imagem e integração com câmera
+# Necessário se vision_processing.py for ativado
+# Recomendado instalar via apt para melhor desempenho no RPi:
+#   sudo apt install python3-opencv
+# Se preferir pip:
+opencv-python-headless~=4.9.0.80
+
+
+# -------------------------------------------------------
+#  INTEGRAÇÃO ROS 2 (opcional)
+# -------------------------------------------------------
+
+# ROS 2 é instalado via apt (não via pip).
+# Se o ambiente ROS 2 Humble/Iron estiver disponível,
+# os pacotes abaixo são acessados via o setup.bash do ROS:
+#
+#   source /opt/ros/humble/setup.bash
+#
+# Dependências pip complementares para ROS 2:
+# rclpy é fornecido pelo apt, não precisa constar aqui.
+# Para transformações de frames:
+# transforms3d~=0.4.1
+
+
+# -------------------------------------------------------
+#  LOGGING E DIAGNÓSTICO
+# -------------------------------------------------------
+
+# Formatação colorida de logs no terminal (opcional, melhora legibilidade)
+colorlog~=6.8.2
+
+
+# -------------------------------------------------------
+#  DESENVOLVIMENTO E TESTES (não instalar em produção)
+# -------------------------------------------------------
+
+# Descomente para ambiente de desenvolvimento:
+# pytest~=8.1.0
+# pytest-cov~=5.0.0
+# black~=24.3.0
+# flake8~=7.0.0
