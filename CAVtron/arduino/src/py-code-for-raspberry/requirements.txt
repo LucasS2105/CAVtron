@@ -1,0 +1,86 @@
+# =============================================================
+#  requirements.txt — Raspberry Pi Zero 2 W
+#  Conversão do firmware Arduino para Python nativo no RPi
+# =============================================================
+#
+#  Instalação:
+#      pip install -r requirements.txt
+#
+#  Pré-requisitos via apt (instalar antes do pip):
+#      sudo apt update
+#      sudo apt install -y python3-pip python3-dev
+#      sudo apt install -y python3-rpi.gpio     # GPIO
+#      sudo apt install -y python3-spidev       # SPI (MCP3008)
+#      sudo apt install -y python3-smbus2       # I2C (HuskyLens)
+#
+#  Habilitar interfaces no raspi-config:
+#      sudo raspi-config → Interface Options:
+#        ├── SPI    → Enable   (sensores de linha via MCP3008)
+#        ├── I2C    → Enable   (HuskyLens)
+#        └── Serial → Enable port, Disable console (se usar UART)
+# =============================================================
+
+
+# -------------------------------------------------------
+#  GPIO — CONTROLE DE PINOS DIGITAIS E PWM
+# -------------------------------------------------------
+
+# Biblioteca oficial do Raspberry Pi para controle GPIO
+# Alternativa de alta precisão: pigpio (sudo apt install pigpio)
+RPi.GPIO~=0.7.1
+
+
+# -------------------------------------------------------
+#  SPI — COMUNICAÇÃO COM MCP3008 (ADC dos sensores de linha)
+# -------------------------------------------------------
+
+# Biblioteca SPI para Python — acesso ao /dev/spidev
+spidev~=3.6
+
+
+# -------------------------------------------------------
+#  I2C — COMUNICAÇÃO COM HUSKYLENS
+# -------------------------------------------------------
+
+# SMBus2: interface I2C moderna, substitui smbus (legado)
+smbus2~=0.4.3
+
+
+# -------------------------------------------------------
+#  UTILITÁRIOS
+# -------------------------------------------------------
+
+# Configuração YAML (robot_config.yaml)
+PyYAML~=6.0.1
+
+# Logging colorido no terminal (opcional)
+colorlog~=6.8.2
+
+
+# -------------------------------------------------------
+#  OPCIONAL — PRECISÃO DE PWM (SERVO/MOTOR)
+# -------------------------------------------------------
+
+# pigpio: PWM por hardware via DMA — elimina jitter de software
+# Requer daemon rodando: sudo pigpiod
+# Substituir RPi.GPIO por pigpio nos drivers para máxima precisão.
+# pigpio~=1.78
+
+
+# -------------------------------------------------------
+#  OPCIONAL — VISÃO COMPUTACIONAL (extensão futura)
+# -------------------------------------------------------
+
+# OpenCV (instalar via apt para melhor desempenho no ARM):
+#   sudo apt install python3-opencv
+# Se preferir pip:
+# opencv-python-headless~=4.9.0.80
+
+
+# -------------------------------------------------------
+#  DESENVOLVIMENTO E TESTES
+# -------------------------------------------------------
+
+# Descomente para ambiente de desenvolvimento:
+# pytest~=8.1.0
+# pytest-cov~=5.0.0
