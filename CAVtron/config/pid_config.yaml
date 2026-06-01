@@ -1,0 +1,130 @@
+# =============================================================
+#  pid_config.yaml
+#  Parâmetros de ajuste do Controlador PID
+# =============================================================
+#
+#  O controlador PID segue a forma posicional discreta:
+#
+#    u(k) = Kp·e(k) + Ki·Ts·Σe(i) − Kd·Δm(k)
+#
+#  Onde:
+#    e(k)  = setpoint − medição   (erro atual)
+#    Σe(i) = acumulador integral  (limitado por integral_max)
+#    Δm(k) = variação da medição  (derivada sobre medição, filtrada)
+#    Ts    = período de amostragem (= loop.period_ms / 1000)
+#
+#  A saída u(k) representa a CORREÇÃO DE DIREÇÃO (steering correction):
+#    v_esq = BASE_SPEED − u(k)
+#    v_dir = BASE_SPEED + u(k)
+#
+#  Sinal de u(k):
+#    u > 0 → linha à direita → acelera motor dir, freia motor esq → curva direita
+#    u < 0 → linha à esquerda → acelera motor esq, freia motor dir → curva esquerda
+#    u = 0 → linha centrada → velocidade simétrica
+#
+# =============================================================
+#
+#  METODOLOGIA DE AJUSTE (Ziegler-Nichols simplificado):
+#
+#  1. Zere Ki e Kd. Aumente Kp até o robô oscilar em torno da linha.
+#     O valor que causa oscilação sustentada é Kp_critico (Ku).
+#
+#  2. Meça o período de oscilação Tu (em segundos).
+#
+#  3. Aplique as fórmulas Z-N para PID clássico:
+#       Kp = 0.6 * Ku
+#       Ki = 2 * Kp / Tu
+#       Kd = Kp * Tu / 8
+#
+#  4. Ajuste fino experimentalmente — Z-N tende a ser agressivo.
+#
+#  AJUSTE MANUAL recomendado para linha com curvas suaves:
+#    - Comece com Kp=20, Ki=0, Kd=0 (somente proporcional)
+#    - Aumente Kp até seguir a linha sem oscilação excessiva
+#    - Adicione Kd para reduzir overshoot em curvas
+#    - Adicione Ki (pequeno) apenas se houver erro em regime permanente
+#
+# =============================================================
+
+
+# -------------------------------------------------------
+#  GANHOS ATIVOS (ajustados para o hardware atual)
+# -------------------------------------------------------
+pid:
+  kp: 32.0                # Ganho proporcional
+  ki: 0.4                 # Ganho integral
+  kd: 22.0                # Ganho derivativo
+
+  # Período de amostragem [segundos] — deve coincidir com loop.period_ms
+  sample_time_s: 0.010    # 10ms → 100 Hz
+
+  # Saturação da saída de controle
+  output_max:  255.0      # Limite superior (motor direito acelera ao máximo)
+  output_min: -255.0      # Limite inferior (motor esquerdo acelera ao máximo)
+
+  # Anti-windup: limite do acumulador integral
+  # Valores típicos: 50–100 para output_max=255
+  # Reduzir se o robô demorar muito para centralizar após curvas acentuadas
+  integral_max: 80.0
+
+  # Filtro EMA no termo derivativo (reduz sensibilidade a ruído)
+  # α ∈ (0,1]: α=1 → derivada pura (máximo ruído)
+  #             α=0.1 → muito filtrado (resposta mais lenta)
+  # Recomendado: 0.1 – 0.3 para sensores IR com ruído moderado
+  derivative_alpha: 0.2
+
+  # Filtro EMA na posição da linha (pré-PID)
+  # Suaviza leituras antes de enviar ao controlador
+  position_filter_alpha: 0.3
+
+
+# -------------------------------------------------------
+#  PERFIS PRÉ-CONFIGURADOS
+#  (selecionar via API WiFi: POST /pid com preset)
+# -------------------------------------------------------
+profiles:
+
+  # Linha reta — alta velocidade, pouco amortecimento
+  aggressive:
+    kp: 45.0
+    ki: 0.2
+    kd: 15.0
+    integral_max: 60.0
+    derivative_alpha: 0.3
+
+  # Curvas fechadas — mais suave, maior estabilidade
+  conservative:
+    kp: 20.0
+    ki: 0.6
+    kd: 28.0
+    integral_max: 100.0
+    derivative_alpha: 0.15
+
+  # Apenas proporcional (para calibração inicial)
+  proportional_only:
+    kp: 25.0
+    ki: 0.0
+    kd: 0.0
+    integral_max: 0.0
+    derivative_alpha: 1.0
+
+  # PD puro (sem integral — evita windup em terrenos variáveis)
+  pd_only:
+    kp: 30.0
+    ki: 0.0
+    kd: 20.0
+    integral_max: 0.0
+    derivative_alpha: 0.2
+
+
+# -------------------------------------------------------
+#  PARÂMETROS DO SENSOR (influenciam a entrada do PID)
+# -------------------------------------------------------
+sensor:
+  # Pesos do centroide para N=8 sensores
+  # Simétricos em relação ao centro: −3.5 a +3.5
+  # NÃO modificar sem alterar line_sensor.py correspondentemente
+  weights: [-3.5, -2.5, -1.5, -0.5, 0.5, 1.5, 2.5, 3.5]
+
+  # Normalizador: peso máximo = (N/2) − 0.5 = 3.5 para N=8
+  weight_normalizer: 3.5

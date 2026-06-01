@@ -1,0 +1,146 @@
+# =============================================================
+#  robot_config.yaml
+#  Configuração principal do sistema — Raspberry Pi Zero 2 W
+# =============================================================
+#
+#  Este arquivo é lido em tempo de execução por utils/helpers.py.
+#  Modificações aqui não requerem recompilação ou reinicialização
+#  do sistema — basta recarregar (SIGHUP ou restart do processo).
+#
+#  IMPORTANTE: valores numéricos de pino usam numeração BCM.
+#  Consulte config.py para o mapeamento completo.
+# =============================================================
+
+
+# -------------------------------------------------------
+#  LOOP PRINCIPAL DE CONTROLE
+# -------------------------------------------------------
+loop:
+  period_ms: 10           # Período do loop principal (100 Hz)
+  # Sugestão para menor jitter: executar com
+  # sudo chrt -f 99 python3 main.py
+
+# -------------------------------------------------------
+#  MOTORES DC (Driver L298N)
+# -------------------------------------------------------
+motors:
+  base_speed: 140         # Velocidade de cruzeiro no seguimento de linha [0–255]
+  max_speed: 255          # Velocidade máxima absoluta [0–255]
+  deadband: 30            # Duty mínimo abaixo do qual o motor não gira
+  pwm_freq_hz: 1000       # Frequência PWM do driver [Hz]
+                          # Alternativa: usar pigpio para menor jitter
+
+  # Pinos GPIO (BCM) — verificar com seu diagrama físico
+  left_pwm_pin:  12
+  left_dir1_pin: 20
+  left_dir2_pin: 21
+  right_pwm_pin: 13
+  right_dir1_pin: 19
+  right_dir2_pin: 26
+
+# -------------------------------------------------------
+#  SERVOMOTORES (Garra)
+# -------------------------------------------------------
+servos:
+  grip_pin: 18            # Pino PWM da garra (BCM)
+  lift_pin: 23            # Pino PWM do braço (BCM)
+  pwm_freq_hz: 50         # Frequência padrão de servo [Hz]
+  sweep_delay_ms: 15      # Intervalo entre passos de 1° (slew rate)
+
+  # Ângulos de operação (graus) — ajustar por calibração mecânica
+  grip_open_deg: 90
+  grip_close_deg: 10
+  lift_up_deg: 90
+  lift_down_deg: 15
+
+  # Duty cycle para 0° e 180° (padrão servo universal)
+  duty_min_pct: 2.5       # 0°  → 0.5ms @ 50Hz
+  duty_max_pct: 12.5      # 180° → 2.5ms @ 50Hz
+
+# -------------------------------------------------------
+#  SENSORES DE LINHA (MCP3008 via SPI)
+# -------------------------------------------------------
+line_sensor:
+  spi_bus: 0              # /dev/spidev0.x
+  spi_device: 0           # CE0 = GPIO 8
+  spi_speed_hz: 1000000   # 1 MHz (MCP3008 suporta até 3.6 MHz @ 5V)
+  sensor_count: 8         # Número de sensores no array
+
+  # Limiar de binarização ADC [0–1023]
+  # Abaixo = linha detectada. Calibrar com linha_sensor.calibrate()
+  threshold: 512
+
+  # Tempo sem detecção antes de manobra de recuperação [segundos]
+  lost_timeout_s: 0.8
+
+  # Canais MCP3008 (sensor 0 = extremo esquerdo, 7 = direito)
+  channels: [0, 1, 2, 3, 4, 5, 6, 7]
+
+# -------------------------------------------------------
+#  CÂMERA HUSKYLENS (I2C)
+# -------------------------------------------------------
+huskylens:
+  i2c_bus: 1              # /dev/i2c-1 (GPIO 2=SDA, GPIO 3=SCL)
+  i2c_address: 0x32       # Endereço padrão HuskyLens
+  poll_interval_ms: 50    # Intervalo de polling (20 Hz)
+  algorithm: 0x04         # 0x04 = Object Recognition (padrão)
+                          # 0x01 = Face Recognition
+                          # 0x05 = Line Tracking
+                          # 0x06 = Color Recognition
+                          # 0x07 = Tag Recognition
+
+  # Resolução da câmera em pixels
+  img_width: 320
+  img_height: 240
+
+  # Limiar de área relativa para considerar vítima "em alcance"
+  # (proxy de distância — área maior = objeto mais próximo)
+  capture_area_threshold: 0.08
+
+# -------------------------------------------------------
+#  COMUNICAÇÃO SERIAL
+# -------------------------------------------------------
+serial:
+  # Porta para debug/PC ou comunicação com microcontrolador externo
+  port: /dev/ttyUSB0      # Alternativas: /dev/ttyS0, /dev/ttyAMA0
+  baudrate: 115200
+  timeout_s: 1.0
+  watchdog_s: 3.0
+  mode: debug             # 'debug' (PC) | 'bridge' (Arduino) | 'monitor'
+  enabled: false          # Desabilita por padrão (sistema autônomo)
+
+# -------------------------------------------------------
+#  COMUNICAÇÃO WIFI (Flask REST + WebSocket)
+# -------------------------------------------------------
+wifi:
+  enabled: true           # Habilitar servidor WiFi
+  host: "0.0.0.0"         # Escuta em todas as interfaces
+  http_port: 8080         # Porta REST
+  ws_port: 8080           # WebSocket no mesmo servidor Flask (/ws)
+  telem_interval_ms: 100  # Taxa de envio de telemetria (10 Hz)
+
+# -------------------------------------------------------
+#  MISSÃO
+# -------------------------------------------------------
+mission:
+  victims_target: 1       # Número de vítimas a resgatar
+  auto_start: true        # Inicia missão automaticamente no boot
+
+  # Velocidades de operação [0–255]
+  approach_speed: 90      # Velocidade de aproximação de vítima
+  avoidance_speed: 110    # Velocidade durante desvio de obstáculo
+  rotation_speed: 120     # Velocidade de rotação in-loco
+
+  # Limiar de alinhamento com vítima (zona morta do steering)
+  victim_center_deadband: 0.15  # Fração da largura da imagem
+
+# -------------------------------------------------------
+#  LOGS
+# -------------------------------------------------------
+logging:
+  level: INFO             # DEBUG | INFO | WARNING | ERROR | CRITICAL
+  log_dir: logs
+  log_file: system.log
+  max_bytes: 5242880      # 5 MB por arquivo
+  backup_count: 3         # Número de arquivos de backup
+  console: true           # Exibir logs no terminal
